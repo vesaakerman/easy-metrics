@@ -22,9 +22,12 @@ mongod --smallfiles &
 ./cmd/importmetadata.py
 ```
 
-# Check if imported data are imported in MongoDB
+# Check if all data are imported in MongoDB
 ```
+# Run from console:
 mongo management
+
+# Run commands one by one to see inserted records 
 db.data.count()
 db.data.find()
 use metadata
