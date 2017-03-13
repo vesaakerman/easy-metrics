@@ -11,4 +11,9 @@ apt-get install python-pip
 
 # Install the basic requirements
 pip install pymongo
+yum install mongodb
+yum install mongodb-server
+
+# Run mongodb
+mongod --smallfiles &
 ```
