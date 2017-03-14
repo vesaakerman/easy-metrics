@@ -49,3 +49,14 @@ It should show output:
 {u'count': 31, u'_id': u'easy-dataset:37221'}
 {u'count': 73, u'_id': u'easy-dataset:44426'}
 ```
+
+# Connect Metrics to Dataverse storage to get data
+```
+cp ./easy/settings/dataverse-settings.py ./easy/settings/dataverseset.py
+vi ./easy/settings/dataverseset.py
+
+# Change settings to provide access to logs and metadata dataset:
+dataversehost = 'dataverse.host'
+key = 'dataverse-token-from-account'
+handle = 'hdl:org/identifier' 
+```
