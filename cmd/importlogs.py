@@ -1,24 +1,25 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
 from __future__ import print_function, absolute_import
 
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-import re
 from os import walk
-from pymongo import MongoClient
 from easy.settings import *
 from easy.core.database import *
-from pprint import pprint 
+from pprint import pprint
+import logging
 
+logging.basicConfig(filename='../tests/logs/importlogs.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 path = "%s/../../tests" % HERE
 logspath = "%s/logs" % path
 print("Importing logs from %s" % logspath)
+logging.info("Importing logs from %s" % logspath)
 
 client = MongoClient()
-management = client.get_database('management')
-col = management.data
+easy_logs = client.get_database('logs')
+col = easy_logs.data
 
 f = []
 for (dirpath, dirnames, filenames) in walk("%s" % logspath):
@@ -29,7 +30,7 @@ for filename in f:
     fullpath = "%s/logs/%s" % (path, filename)
     outpath = "%s/reports/%s.sum" % (path, filename)
     print(fullpath)
-    file2mongo(fullpath, col)
+    log_file2mongo(fullpath, col)
 
-print("Import is finished.")
-
+print("Importing logs is finished.")
+logging.info("Importing logs is finished.")
