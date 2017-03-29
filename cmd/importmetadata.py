@@ -10,7 +10,7 @@ from easy.settings import *
 from easy.core.database import *
 
 import logging
-logging.basicConfig(filename='../tests/logs/importmetadata.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
+logging.basicConfig(filename='tests/logs/importmetadata.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 
 path = "%s/../../tests" % HERE
 metadatapath = "%s/metadata" % path
