@@ -88,11 +88,10 @@ def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data):
         logging.error("in inserting file %s of dataset %s into 'file' database" % (file_name, dataset_pid))
 
 
-def log_file2mongo(path, col):
+def log_file2mongo(path, col, report):
     fullpath = path
-    outpath = "%s.done" % path
     file = open(fullpath, 'r')
-    outfile = open(outpath,'w')
+    outfile = open(report,'w')
     file.readline()
 
     for lastline in file:

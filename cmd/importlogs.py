@@ -11,7 +11,7 @@ from easy.core.database import *
 from pprint import pprint
 import logging
 
-logging.basicConfig(filename='tests/logs/importlogs.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
+logging.basicConfig(filename='logs/importlogs.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 path = "%s/../../tests" % HERE
 logspath = "%s/logs" % path
 print("Importing logs from %s" % logspath)
@@ -28,9 +28,9 @@ for (dirpath, dirnames, filenames) in walk("%s" % logspath):
 
 for filename in f:
     fullpath = "%s/logs/%s" % (path, filename)
-    outpath = "%s/reports/%s.sum" % (path, filename)
+    report = "%s/reports/%s.done" % (path, filename)
     print(fullpath)
-    log_file2mongo(fullpath, col)
+    log_file2mongo(fullpath, col, report)
 
 print("Importing logs is finished.")
 logging.info("Importing logs is finished.")
