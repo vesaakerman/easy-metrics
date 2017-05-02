@@ -72,7 +72,7 @@ def metadata2mongo(fullpath, logging):
     metadata['creator'] = creator
     metadata['format'] = format
     for file_name, file_data in dataset_files.iteritems():
-        dataset_file2mongo(metadata['DATASET-PID'], metadata['EMD:dateSubmitted'], file_name, file_data)
+        dataset_file2mongo(metadata['DATASET-PID'], metadata.get('EMD:dateSubmitted', None), file_name, file_data)
 
     return metadata
 
@@ -97,6 +97,7 @@ def log_file2mongo(path, col, report):
     for lastline in file:
         lastline = lastline[:-1]
         try:
+            logging.info("inserting line %s of file %s " % (lastline, fullpath))
             col.insert_one(get_log_details(lastline, outfile))
         except:
             logging.error("in inserting line %s into 'logs' database" % lastline)
