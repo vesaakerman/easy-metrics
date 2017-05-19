@@ -14,56 +14,71 @@ def metadata2mongo(fullpath, logging):
     file = open(fullpath, 'r')
 
     metadata = {}
-    audience, coverage, title, rights, creator, format = [], [], [], [], [], []
+    audience, coverage, title, rights, creator, format, type, subject = [], [], [], [], [], [], [], []
     dataset_files = {}
 
     for lastline in file:
-        item = re.search(r"(.+?)\=(.+)$", lastline)
-        if item:
-            try:
-                if item.group(1):
-                    metakey = str(item.group(1))
-                    data = str(item.group(2))
+        try:
+            if lastline.startswith('FILE['):
+                metakey = lastline[: lastline.rindex("=")]
+                data = lastline[lastline.rindex("=") + 1 :].rstrip()
+            else:
+                metakey = lastline[: lastline.index("=")]
+                data = lastline[lastline.index("=") + 1 :].rstrip()
 
-                    if metakey in ('DATASET-PID', 'AMD:depositor', 'AMD:datasetState', 'EMD:dateCreated'):
-                        metadata[metakey] = data
-                    if metakey == 'EMD:dateSubmitted':
-                        metadata[metakey] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
-                    elif metakey == 'EMD:audience':
-                        audience.append(data)
-                    elif metakey == 'EMD:coverage':
-                        coverage.append(data)
-                    elif metakey == 'EMD:title':
-                        title.append(data)
-                    elif metakey == 'EMD:rights':
-                        rights.append(data)
-                    elif metakey == 'EMD:creator':
-                        creator.append(data)
-                    elif metakey == 'EMD:format':
-                        format.append(data)
-                    elif metakey.startswith('FILE['):
-                        name = re.search(r".+\[(.+)\].+$", metakey).group(1)
-                        if name:
-                            if not dataset_files.has_key(name):
-                                dataset_files[name] = {}
-                            if metakey.endswith("PID"):
-                                dataset_files[name]['pid']= data
-                            elif metakey.endswith("size"):
-                                dataset_files[name]['size']= data
-                            elif metakey.endswith("mimeType"):
-                                dataset_files[name]['mimeType']= data
-                            elif metakey.endswith("creatorRole"):
-                                dataset_files[name]['creatorRole']= data
-                            elif metakey.endswith("accessibleTo"):
-                                dataset_files[name]['accessibleTo']= data
-                            elif metakey.endswith("visibleTo"):
-                                dataset_files[name]['visibleTo'] = data
-                        else:
-                            logging.error("No filename found in item %s", metakey)
+            if metakey == 'DATASET-PID':
+                metadata["pid"] = data
+            elif metakey == 'AMD:depositor':
+                metadata["depositor"] = data
+            elif metakey == 'AMD:datasetState':
+                metadata["datasetState"] = data
+            elif metakey == 'EMD:dateCreated':
+                metadata["dateCreated"] = data
+            elif metakey == 'EMD:dateAvailable':
+                metadata["dateAvailable"] = data
+            elif metakey == 'EMD:dateSubmitted':
+                metadata["dateSubmitted"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
+            elif metakey == 'EMD:audience':
+                audience.append(data)
+            elif metakey == 'EMD:coverage':
+                coverage.append(data)
+            elif metakey == 'EMD:title':
+                title.append(data)
+            elif metakey == 'EMD:rights':
+                if data in ['OPEN_ACCESS', 'OPEN_ACCESS_FOR_REGISTERED_USERS', 'GROUP_ACCESS', 'NO_ACCESS', 'ANONYMOUS_ACCESS', 'REQUEST_PERMISSION', 'ACCESS_ELSEWHERE', 'FREELY_AVAILABLE']:
+                    if data == 'NO_ACCESS':
+                        rights.append('CLOSED ACCESS')
+                    else:
+                        rights.append(data.replace('_', ' '))
+            elif metakey == 'EMD:creator':
+                creator.append(data)
+            elif metakey == 'EMD:format':
+                format.append(data)
+            elif metakey == 'EMD:type':
+                type.append(data)
+            elif metakey == 'EMD:subject':
+                subject.append(data)
+            elif metakey.startswith('FILE['):
+                name = re.search(r".+\[(.+)\].+$", metakey).group(1)
+                if name:
+                    if not dataset_files.has_key(name):
+                        dataset_files[name] = {}
+                    if metakey.endswith("PID"):
+                        dataset_files[name]['pid'] = data
+                    elif metakey.endswith("size"):
+                        dataset_files[name]['size'] = data
+                    elif metakey.endswith("mimeType"):
+                        dataset_files[name]['mimeType'] = data
+                    elif metakey.endswith("creatorRole"):
+                        dataset_files[name]['creatorRole'] = data
+                    elif metakey.endswith("accessibleTo"):
+                        dataset_files[name]['accessibleTo'] = data
+                    elif metakey.endswith("visibleTo"):
+                        dataset_files[name]['visibleTo'] = data
                 else:
-                    logging.error("in processing line %s" % lastline.rstrip())
-            except:
-                logging.error("in processing line %s" % lastline.rstrip())
+                    logging.error("No filename found in item %s", metakey)
+        except:
+            logging.error("while processing line %s" % lastline.rstrip())
 
     metadata['audience'] = audience
     metadata['coverage'] = coverage
@@ -71,8 +86,10 @@ def metadata2mongo(fullpath, logging):
     metadata['rights'] = rights
     metadata['creator'] = creator
     metadata['format'] = format
+    metadata['type'] = type
+    metadata['subject'] = subject
     for file_name, file_data in dataset_files.iteritems():
-        dataset_file2mongo(metadata['DATASET-PID'], metadata['EMD:dateSubmitted'], file_name, file_data)
+        dataset_file2mongo(metadata['pid'], metadata.get('dateSubmitted', None), file_name, file_data)
 
     return metadata
 
@@ -97,6 +114,7 @@ def log_file2mongo(path, col, report):
     for lastline in file:
         lastline = lastline[:-1]
         try:
+            logging.info("inserting line %s of file %s " % (lastline, fullpath))
             col.insert_one(get_log_details(lastline, outfile))
         except:
             logging.error("in inserting line %s into 'logs' database" % lastline)
