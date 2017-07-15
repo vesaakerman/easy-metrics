@@ -39,7 +39,6 @@ def metadata2mongo(fullpath, logging):
                 metadata["dateAvailable"] = data
             elif metakey == 'EMD:dateSubmitted':
                 metadata["dateSubmitted"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
-                year_and_month = datetime(int(data[:4]), int(data[5:7]), 1)
             elif metakey == 'EMD:audience':
                 audience.append(data)
             elif metakey == 'EMD:coverage':
@@ -69,7 +68,7 @@ def metadata2mongo(fullpath, logging):
                     # if metakey.endswith("PID"):
                     #     dataset_files[name]['pid'] = data
                     elif metakey.endswith("size"):
-                        dataset_files[name]['size'] = long(data)
+                        size = long(data)
                     elif metakey.endswith("mimeType"):
                         dataset_files[name]['mimeType'] = data.lower()
                     elif metakey.endswith("creatorRole"):
@@ -93,11 +92,11 @@ def metadata2mongo(fullpath, logging):
     metadata['type'] = type
     metadata['subject'] = subject
     for file_name, file_data in dataset_files.iteritems():
-        dataset_file2mongo(metadata['pid'], year_and_month, file_name, file_data)
+        dataset_file2mongo(metadata['pid'], metadata['dateSubmitted'], file_name, file_data, size)
 
     return metadata
 
-def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data):
+def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data, size):
 
     # 'name' is excluded because it is not needed in the produced reports
     # file_data['name'] = file_name
@@ -108,7 +107,7 @@ def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data):
     try:
         # If a document with identical values is found, the count value of the document is increased by 1
         # and the size value is accumulated. Otherwise a new document is created.
-        col.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': file_data.get('size', 0)}}, upsert=True)
+        col.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': size}}, upsert=True)
     except:
         logging.error("in inserting file %s of dataset %s into 'file' database" % (file_name, dataset_pid))
 
