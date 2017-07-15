@@ -92,7 +92,7 @@ def metadata2mongo(fullpath, logging):
     metadata['type'] = type
     metadata['subject'] = subject
     for file_name, file_data in dataset_files.iteritems():
-        dataset_file2mongo(metadata['pid'], metadata['dateSubmitted'], file_name, file_data, size)
+        dataset_file2mongo(metadata['pid'], metadata.get('dateSubmitted', None), file_name, file_data, size)
 
     return metadata
 
