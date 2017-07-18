@@ -124,42 +124,40 @@ def log_file2mongo(path, col, report):
             logging.info("adding line %s of file %s " % (lastline, fullpath))
             # If a document with identical values is found, the count value of the document is increased by 1.
             # Otherwise a new document is created.
-            col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1 }}, upsert=True)
+            nr_of_files = int(lastline.count("FILE_NAME"))
+            if nr_of_files > 0:
+                col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1, 'files' : nr_of_files}}, upsert=True)
+            else:
+                col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
         except:
             logging.error("in inserting line %s into 'logs' database" % lastline)
 
     outfile.close()
 
 def get_log_details(line, outfile):
-    search_results = {}
-    parts = re.compile("\s+\;\s+").split(line)
-    # search_results['date'] = re.search(r"^(\d{4}-\d{2}-\d{2}).*", parts[0])
-    search_results['date'] = re.search(r"^(\d{4}-\d{2}).*", parts[0])
-    search_results['type'] = re.search(r"^.+ - (.*).*", parts[0])
-    search_results['user'] = re.search(r"(.*)", parts[1])
-    search_results['roles'] = re.search(r".+\((.*)\).*", parts[2])
-    # 'groups' and 'ip' are excluded because they are not needed in the produced reports
-    # search_results['groups'] = re.search(r".+\((.*)\).*", parts[3])
-    # search_results['ip'] = re.search(r"(.*)", parts[4])
-
     details = {}
-    for k, v in search_results.iteritems():
-        value = get_value(v)
-        if k == 'date':
-            # details[k] = datetime(int(value[:4]), int(value[5:7]), int(value[8:10]))
-            # Because we collate dates at month level, we set for each document the first day of the month
-            details[k] = datetime(int(value[:4]), int(value[5:7]), int(1))
-        else:
-            details[k] = value
-    report = "ip: %s type: %s" % (parts[4], get_value(search_results['type']))
+    parts = re.compile("\s+\;\s+").split(line)
 
-    if len(parts) >= 6:
-        value = get_value(re.search(r".*DATASET_ID.*\"(.*)\".*", parts[5]))
-        if value:
-            # 'dataset' is excluded because it is not needed in the produced reports
-            # details['dataset'] = value
-            report += (" dataset: %s" % value)
+    # details['date'] = get_value(re.search(r"^(\d{4}-\d{2}-\d{2}).*", parts[0]))
+    date = get_value(re.search(r"^(\d{4}-\d{2}).*", parts[0]))
+    details['date'] = datetime(int(date[:4]), int(date[5:7]), int(1))
+    details['type'] = get_value(re.search(r"^.+ - (.*).*", parts[0]))
+    details['user'] = get_value(re.search(r"(.*)", parts[1]))
+    details['roles'] = get_value(re.search(r".+\((.*)\).*", parts[2]))
+    # 'groups' and 'ip' are excluded because they are not needed in the produced reports
+    # details['groups'] = get_value(re.search(r".+\((.*)\).*", parts[3]))
+    # details['ip'] = get_value(re.search(r"(.*)", parts[4]))
 
+    if details['type'] in ('DATASET_VIEWED', 'DATASET_DEPOSIT', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST', 'FILE_DEPOSIT'):
+        details['dataset'] = get_value(re.search(r".*DATASET_ID.*\"(.*)\".*", parts[5]))
+    if details['type'] in ('DATASET_VIEWED', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST'):
+        details['discipline'] = get_value(re.search(r".*SUB_DISCIPLINE_LABEL\: *\"([a-zA-Z \-\(\)\,]*)\".*", line))
+
+    report = "type: %s date: %s user: %s roles: %s ip: %s" % (details['type'], details['date'], details['user'], details['roles'], parts[4])
+    if details.get('dataset', None):
+        report += (" dataset: %s" % details['dataset'])
+    if details.get('discipline', None):
+        report += (" discipline: %s" % details['discipline'])
     outfile.write(report + "\n")
 
     return details
