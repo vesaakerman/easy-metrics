@@ -118,19 +118,23 @@ def log_file2mongo(path, col, report):
     outfile = open(report,'w')
     file.readline()
 
+    logging.info("Starting to parse file %s " % (fullpath))
     for lastline in file:
         lastline = lastline[:-1]
         try:
-            logging.info("adding line %s of file %s " % (lastline, fullpath))
-            # If a document with identical values is found, the count value of the document is increased by 1.
-            # Otherwise a new document is created.
-            nr_of_files = int(lastline.count("FILE_NAME"))
-            if nr_of_files > 0:
-                col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1, 'files' : nr_of_files}}, upsert=True)
-            else:
-                col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
+            log_details = get_log_details(lastline, outfile)
+            if log_details:
+                logging.info("adding line %s of file %s " % (lastline, fullpath))
+                # If a document with identical values is found, the count value of the document is increased by 1.
+                # Otherwise a new document is created.
+                nr_of_files = int(lastline.count("FILE_NAME"))
+                if nr_of_files > 0:
+                    col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1, 'files' : nr_of_files}}, upsert=True)
+                else:
+                    col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
         except:
             logging.error("in inserting line %s into 'logs' database" % lastline)
+    logging.info("Finished parsing file %s " % (fullpath))
 
     outfile.close()
 
@@ -138,9 +142,8 @@ def get_log_details(line, outfile):
     details = {}
     parts = re.compile("\s+\;\s+").split(line)
 
-    # details['date'] = get_value(re.search(r"^(\d{4}-\d{2}-\d{2}).*", parts[0]))
-    date = get_value(re.search(r"^(\d{4}-\d{2}).*", parts[0]))
-    details['date'] = datetime(int(date[:4]), int(date[5:7]), int(1))
+    date = get_value(re.search(r"^(\d{4}-\d{2}-\d{2}).*", parts[0]))
+    details['date'] = datetime(int(date[:4]), int(date[5:7]), int(date[8:10]))
     details['type'] = get_value(re.search(r"^.+ - (.*).*", parts[0]))
     details['user'] = get_value(re.search(r"(.*)", parts[1]))
     details['roles'] = get_value(re.search(r".+\((.*)\).*", parts[2]))
@@ -148,19 +151,21 @@ def get_log_details(line, outfile):
     # details['groups'] = get_value(re.search(r".+\((.*)\).*", parts[3]))
     # details['ip'] = get_value(re.search(r"(.*)", parts[4]))
 
-    if details['type'] in ('DATASET_VIEWED', 'DATASET_DEPOSIT', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST', 'FILE_DEPOSIT'):
+    if details['type'] in ('DATASET_DEPOSIT', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST', 'FILE_DEPOSIT'):
         details['dataset'] = get_value(re.search(r".*DATASET_ID.*\"(.*)\".*", parts[5]))
-    if details['type'] in ('DATASET_VIEWED', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST'):
-        details['discipline'] = get_value(re.search(r".*SUB_DISCIPLINE_LABEL\: *\"([a-zA-Z \-\(\)\,]*)\".*", line))
+        if details['type'] in ('DATASET_VIEWED', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST'):
+            details['discipline'] = get_value(re.search(r".*SUB_DISCIPLINE_LABEL\: *\"([a-zA-Z \-\(\)\,]*)\".*", line))
 
-    report = "type: %s date: %s user: %s roles: %s ip: %s" % (details['type'], details['date'], details['user'], details['roles'], parts[4])
-    if details.get('dataset', None):
-        report += (" dataset: %s" % details['dataset'])
-    if details.get('discipline', None):
-        report += (" discipline: %s" % details['discipline'])
-    outfile.write(report + "\n")
+        report = "type: %s date: %s user: %s roles: %s ip: %s" % (details['type'], details['date'], details['user'], details['roles'], parts[4])
+        if details.get('dataset', None):
+            report += (" dataset: %s" % details['dataset'])
+        if details.get('discipline', None):
+            report += (" discipline: %s" % details['discipline'])
+        outfile.write(report + "\n")
+        return details
+    else:
+        return None
 
-    return details
 
 def get_value(search_result):
     if search_result:
