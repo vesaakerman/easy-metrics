@@ -18,8 +18,8 @@ print("Importing logs from %s" % logspath)
 logging.info("Importing logs from %s" % logspath)
 
 client = MongoClient()
-easy_logs = client.get_database('logs')
-col = easy_logs.data
+easy_logs = client.get_database('easy')
+col = easy_logs.logs
 
 f = []
 for (dirpath, dirnames, filenames) in walk("%s" % logspath):

@@ -18,8 +18,8 @@ print("Importing metadata from %s" % metadatapath)
 logging.info("Importing metadata from %s" % metadatapath)
 
 client = MongoClient()
-datasetdb = client.get_database('dataset')
-col = datasetdb.data
+datasetdb = client.get_database('easy')
+col = datasetdb.dataset
 
 f = []
 for (dirpath, dirnames, filenames) in walk("%s" % metadatapath):
