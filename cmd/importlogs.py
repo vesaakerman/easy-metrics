@@ -13,6 +13,7 @@ import logging
 
 logging.basicConfig(filename='logs/importlogs.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 path = "%s/../../tests" % HERE
+#path = "%s/../../easyimports/" % HERE
 logspath = "%s/logs" % path
 print("Importing logs from %s" % logspath)
 logging.info("Importing logs from %s" % logspath)

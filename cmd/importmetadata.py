@@ -8,11 +8,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from os import walk
 from easy.settings import *
 from easy.core.database import *
+from pprint import pprint
 
 import logging
 logging.basicConfig(filename='logs/importmetadata.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 
 path = "%s/../../tests" % HERE
+#path = "%s/../../easyimports/" % HERE
 metadatapath = "%s/metadata" % path
 print("Importing metadata from %s" % metadatapath)
 logging.info("Importing metadata from %s" % metadatapath)
@@ -23,10 +25,13 @@ col = datasetdb.dataset
 
 f = []
 for (dirpath, dirnames, filenames) in walk("%s" % metadatapath):
+    pprint(filenames)
     f.extend(filenames)
 
 for filename in f:
     filepath = "%s/metadata/%s" % (path, filename)
+    logging.info("Processing %s" % filepath)
+    print("Processing %s" % filepath)
     metadata = metadata2mongo(filepath, logging)
     if metadata:
         try:
