@@ -20,7 +20,7 @@ print("Importing metadata from %s" % metadatapath)
 logging.info("Importing metadata from %s" % metadatapath)
 
 client = MongoClient()
-datasetdb = client.get_database('easy')
+datasetdb = client.easy
 col = datasetdb.dataset
 
 f = []

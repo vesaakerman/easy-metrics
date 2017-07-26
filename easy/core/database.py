@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 
 client = MongoClient()
-filedb = client.get_database('easy')
+filedb = client.easy
 col = filedb.file
 
 def metadata2mongo(fullpath, logging):
