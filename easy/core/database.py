@@ -125,23 +125,25 @@ def log_file2mongo(path, col, report):
     for lastline in file:
         lastline = lastline[:-1]
         try:
-            log_details = get_log_details(lastline, outfile)
+            nr_of_files = int(lastline.count("FILE_NAME"))
+            log_details = get_log_details(lastline, nr_of_files, outfile)
             if log_details:
                 logging.info("adding line %s of file %s " % (lastline, fullpath))
                 # If a document with identical values is found, the count value of the document is increased by 1.
                 # Otherwise a new document is created.
                 nr_of_files = int(lastline.count("FILE_NAME"))
-                if nr_of_files > 0:
-                    col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1, 'files' : nr_of_files}}, upsert=True)
-                else:
-                    col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
+                # if nr_of_files > 0:
+                #     col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1, 'files' : nr_of_files}}, upsert=True)
+                # else:
+                #     col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
+                col.insert_one(log_details)
         except:
             logging.error("in inserting line %s into 'logs' database" % lastline)
     logging.info("Finished parsing file %s " % (fullpath))
 
     outfile.close()
 
-def get_log_details(line, outfile):
+def get_log_details(line, nr_of_files, outfile):
     details = {}
     parts = re.compile("\s+\;\s+").split(line)
 
@@ -150,9 +152,10 @@ def get_log_details(line, outfile):
     details['type'] = get_value(re.search(r"^.+ - (.*).*", parts[0]))
     details['user'] = get_value(re.search(r"(.*)", parts[1]))
     details['roles'] = get_value(re.search(r".+\((.*)\).*", parts[2]))
-    # 'groups' and 'ip' are excluded because they are not needed in the produced reports
-    # details['groups'] = get_value(re.search(r".+\((.*)\).*", parts[3]))
-    # details['ip'] = get_value(re.search(r"(.*)", parts[4]))
+    details['groups'] = get_value(re.search(r".+\((.*)\).*", parts[3]))
+    details['ip'] = get_value(re.search(r"(.*)", parts[4]))
+    if nr_of_files > 0:
+        details['files'] = nr_of_files
 
     if details['type'] in ('DATASET_DEPOSIT', 'DATASET_PUBLISHED', 'DOWNLOAD_DATASET_REQUEST', 'DOWNLOAD_FILE_REQUEST', 'FILE_DEPOSIT'):
         details['dataset'] = get_value(re.search(r".*DATASET_ID.*\"(.*)\".*", parts[5]))
