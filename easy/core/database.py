@@ -102,7 +102,8 @@ def metadata2mongo(fullpath, logging):
 
     # To be able to find in the logs collection also those datasets that don't have any DATASET_DEPOSIT or DATASET_PUBLISH events
     # we add a DATA_SUBMITTED event.
-    dataset_submitted_event_2mongo(metadata["pid"], metadata["dateSubmitted"], metadata['audience'], metadata['files'])
+    if 'dateSubmitted' in metadata:
+        dataset_submitted_event_2mongo(metadata['pid'], metadata['dateSubmitted'], metadata['audience'], metadata['files'])
 
     return metadata
 

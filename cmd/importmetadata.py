@@ -13,7 +13,7 @@ from pprint import pprint
 import logging
 logging.basicConfig(filename='logs/importmetadata.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 
-path = "%s/../../easyimports/" % HERE
+path = "%s/../../easyimports" % HERE
 metadatapath = "%s/metadata" % path
 print("Importing metadata from %s" % metadatapath)
 logging.info("Importing metadata from %s" % metadatapath)
