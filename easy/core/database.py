@@ -8,7 +8,8 @@ import logging
 
 client = MongoClient()
 filedb = client.easy
-col = filedb.file
+collection_file = filedb.file
+collection_logs = filedb.logs
 
 def metadata2mongo(fullpath, logging):
     file = open(fullpath, 'r')
@@ -94,8 +95,13 @@ def metadata2mongo(fullpath, logging):
     nr_files = 0
     for file_name, file_data in dataset_files.iteritems():
         nr_files += 1
-        dataset_file2mongo(metadata['pid'], metadata.get('dateSubmitted', None), file_name, file_data, size)
+        # at this moment there are no queries where we would need more information about the files
+        # dataset_file2mongo(metadata['pid'], metadata.get('dateSubmitted', None), file_name, file_data, size)
     metadata['files'] = nr_files
+
+    # To be able to find in the logs collection also those datasets that don't have any DATASET_DEPOSIT or DATASET_PUBLISH events
+    # we add a DATA_SUBMITTED event.
+    dataset_submitted_event_2mongo(metadata["pid"], metadata["dateSubmitted"], metadata['audience'], metadata['files'])
 
     return metadata
 
@@ -110,9 +116,30 @@ def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data, size):
     try:
         # If a document with identical values is found, the count value of the document is increased by 1
         # and the size value is accumulated. Otherwise a new document is created.
-        col.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': size}}, upsert=True)
+        collection_file.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': size}}, upsert=True)
     except:
         logging.error("in inserting file %s of dataset %s into 'file' database" % (file_name, dataset_pid))
+
+
+def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
+    logging.info("Writing DATASET_SUBMITTED event to log file for dataset %s " % dataset)
+
+    details = {}
+    details['dataset'] = dataset
+    details['discipline'] = discipline
+    details['date'] = date
+    details['type'] = 'DATASET_SUBMITTED'
+    details['user'] = None
+    details['roles'] = None
+    details['groups'] = None
+    details['ip'] = 'INSERTED BY THE IMPORT TOOL'
+    if nr_of_files > 0:
+        details['files'] = nr_of_files
+
+    try:
+        collection_logs.insert_one(details)
+    except:
+        logging.error("in inserting DATASET_SUBMITTED event for dataset %s into 'logs' database" % dataset)
 
 
 def log_file2mongo(path, col, report):
