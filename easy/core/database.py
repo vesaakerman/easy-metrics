@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function, absolute_import
 
+import sys
 import re
 from pymongo import MongoClient
 from datetime import datetime
@@ -82,7 +83,7 @@ def metadata2mongo(fullpath, logging):
                 else:
                     logging.error("No filename found in item %s", metakey)
         except:
-            logging.error("while processing line %s" % lastline.rstrip())
+            logging.error("while processing line %s. Error: %s" % (lastline.rstrip(), sys.exc_info()[0]))
 
     metadata['audience'] = audience
     metadata['coverage'] = coverage
@@ -118,7 +119,7 @@ def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data, size):
         # and the size value is accumulated. Otherwise a new document is created.
         collection_file.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': size}}, upsert=True)
     except:
-        logging.error("in inserting file %s of dataset %s into 'file' database" % (file_name, dataset_pid))
+        logging.error("in inserting file %s of dataset %s into 'file' database. Error: %s" % (file_name, dataset_pid, sys.exc_info()[0]))
 
 
 def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
@@ -139,7 +140,7 @@ def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
     try:
         collection_logs.insert_one(details)
     except:
-        logging.error("in inserting DATASET_SUBMITTED event for dataset %s into 'logs' database" % dataset)
+        logging.error("in inserting DATASET_SUBMITTED event for dataset %s into 'logs' database. Error: %s" % (dataset, sys.exc_info()[0]))
 
 
 def log_file2mongo(path, col, report):
@@ -165,7 +166,7 @@ def log_file2mongo(path, col, report):
                 #     col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
                 col.insert_one(log_details)
         except:
-            logging.error("in inserting line %s into 'logs' database" % lastline)
+            logging.error("in inserting line %s into 'logs' database. Error: %s" % (lastline, sys.exc_info()[0]))
     logging.info("Finished parsing file %s " % (fullpath))
 
     outfile.close()

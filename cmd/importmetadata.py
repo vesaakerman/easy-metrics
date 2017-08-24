@@ -37,7 +37,7 @@ for filename in f:
         try:
             col.insert_one(metadata)
         except:
-            logging.error("Error in inserting %s into 'dataset' database" % (path + "/" + filename))
+            logging.error("Error in inserting %s into 'dataset' database. Error: %s" % (path + "/" + filename, sys.exc_info()[0]))
 
 print("Metadata imported")
 logging.info("Metadata imported")
