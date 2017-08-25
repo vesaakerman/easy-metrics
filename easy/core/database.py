@@ -38,7 +38,7 @@ def metadata2mongo(fullpath, logging):
             elif metakey == 'EMD:dateCreated':
                 metadata["dateCreated"] = data
             elif metakey == 'EMD:dateAvailable':
-                metadata["dateAvailable"] = data
+                metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
             elif metakey == 'EMD:dateSubmitted':
                 metadata["dateSubmitted"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
             elif metakey == 'EMD:audience':
@@ -104,6 +104,8 @@ def metadata2mongo(fullpath, logging):
     # we add a DATA_SUBMITTED event.
     if 'dateSubmitted' in metadata:
         dataset_submitted_event_2mongo(metadata['pid'], metadata['dateSubmitted'], metadata['audience'], metadata['files'])
+    elif 'dateAvailable' in metadata:
+        dataset_submitted_event_2mongo(metadata['pid'], metadata['dateAvailable'], metadata['audience'], metadata['files'])
 
     return metadata
 
