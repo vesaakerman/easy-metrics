@@ -17,9 +17,9 @@ yum install mongodb-server
 # Run mongodb
 mongod --smallfiles &
 
-# Import test logs and metadata
+# Import test logs and datasets
 ./cmd/importlogs.py
-./cmd/importmetadata.py
+./cmd/importdatasets.py
 ```
 
 # Check if all data are imported in MongoDB

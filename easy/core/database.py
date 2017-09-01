@@ -21,7 +21,6 @@ def metadata2mongo(fullpath, logging):
 
     for lastline in file:
         try:
-            year_and_month = None
             if lastline.startswith('FILE['):
                 metakey = lastline[: lastline.rindex("=")]
                 data = lastline[lastline.rindex("=") + 1 :].rstrip()
@@ -38,7 +37,12 @@ def metadata2mongo(fullpath, logging):
             elif metakey == 'EMD:dateCreated':
                 metadata["dateCreated"] = data
             elif metakey == 'EMD:dateAvailable':
-                metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
+                if len(data) > 7:
+                    metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
+                elif len(data) > 5:
+                        metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
+                else:
+                    metadata["dateAvailable"] = datetime(int(data[:4]), 1, 1)
             elif metakey == 'EMD:dateSubmitted':
                 metadata["dateSubmitted"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
             elif metakey == 'EMD:audience':
@@ -83,7 +87,7 @@ def metadata2mongo(fullpath, logging):
                 else:
                     logging.error("No filename found in item %s", metakey)
         except:
-            logging.error("while processing line %s. Error: %s" % (lastline.rstrip(), sys.exc_info()[0]))
+            logging.error("while processing line %s Error: %s" % (lastline.rstrip(), sys.exc_info()[0]))
 
     metadata['audience'] = audience
     metadata['coverage'] = coverage
