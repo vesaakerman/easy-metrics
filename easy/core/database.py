@@ -40,7 +40,7 @@ def metadata2mongo(fullpath, logging):
                 if len(data) > 7:
                     metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
                 elif len(data) > 5:
-                        metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), int(data[8:10]))
+                        metadata["dateAvailable"] = datetime(int(data[:4]), int(data[5:7]), 1)
                 else:
                     metadata["dateAvailable"] = datetime(int(data[:4]), 1, 1)
             elif metakey == 'EMD:dateSubmitted':
