@@ -11,10 +11,10 @@ from easy.core.database import *
 from pprint import pprint
 
 import logging
-logging.basicConfig(filename='logs/importmetadata.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
+logging.basicConfig(filename='logs/importdatasets.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 
 path = "%s/../../easyimports" % HERE
-metadatapath = "%s/metadata" % path
+metadatapath = "%s/datasets" % path
 print("Importing metadata from %s" % metadatapath)
 logging.info("Importing metadata from %s" % metadatapath)
 
@@ -28,7 +28,7 @@ for (dirpath, dirnames, filenames) in walk("%s" % metadatapath):
     f.extend(filenames)
 
 for filename in f:
-    filepath = "%s/metadata/%s" % (path, filename)
+    filepath = "%s/datasets/%s" % (path, filename)
     logging.info("Processing %s" % filepath)
     print("Processing %s" % filepath)
     metadata = metadata2mongo(filepath, logging)
