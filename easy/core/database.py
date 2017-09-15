@@ -7,10 +7,29 @@ from pymongo import MongoClient
 from datetime import datetime
 import logging
 
+INFO = 'info'
+ERROR = 'error'
+WARN = 'warn'
+
 client = MongoClient()
 filedb = client.easy
 collection_file = filedb.file
 collection_logs = filedb.logs
+collection_status = filedb.status
+
+def log_message(level, message):
+    if level == INFO:
+        logging.info(message)
+    elif level == ERROR:
+        logging.error(message)
+    elif level == WARN:
+        logging.warn(message)
+
+def get_last_imported_dataset_number():
+    return collection_status.find_one({ 'document': 1 })['last_dataset_number']
+
+def update_last_imported_dataset_number(number):
+    collection_status.update_one({ 'document': 1 }, { '$set': {'last_dataset_number': number}})
 
 def metadata2mongo(fullpath, logging):
     file = open(fullpath, 'r')
@@ -19,14 +38,14 @@ def metadata2mongo(fullpath, logging):
     audience, coverage, title, rights, creator, format, type, subject = [], [], [], [], [], [], [], []
     dataset_files = {}
 
-    for lastline in file:
+    for line in file:
         try:
-            if lastline.startswith('FILE['):
-                metakey = lastline[: lastline.rindex("=")]
-                data = lastline[lastline.rindex("=") + 1 :].rstrip()
+            if line.startswith('FILE['):
+                metakey = line[: line.rindex("=")]
+                data = line[line.rindex("=") + 1 :].rstrip()
             else:
-                metakey = lastline[: lastline.index("=")]
-                data = lastline[lastline.index("=") + 1 :].rstrip()
+                metakey = line[: line.index("=")]
+                data = line[line.index("=") + 1 :].rstrip()
 
             if metakey == 'DATASET-PID':
                 metadata["pid"] = data
@@ -85,9 +104,11 @@ def metadata2mongo(fullpath, logging):
                     # elif metakey.endswith("visibleTo"):
                     #     dataset_files[name]['visibleTo'] = data
                 else:
-                    logging.error("No filename found in item %s", metakey)
+                    log_message(ERROR, "No filename found in item %s", metakey)
+                    return
         except:
-            logging.error("while processing line %s Error: %s" % (lastline.rstrip(), sys.exc_info()[0]))
+            log_message(ERROR, "while processing line %s Error: %s" % (line.rstrip(), sys.exc_info()[0]))
+            return
 
     metadata['audience'] = audience
     metadata['coverage'] = coverage
@@ -104,13 +125,6 @@ def metadata2mongo(fullpath, logging):
         # dataset_file2mongo(metadata['pid'], metadata.get('dateSubmitted', None), file_name, file_data, size)
     metadata['files'] = nr_files
 
-    # To be able to find in the logs collection also those datasets that don't have any DATASET_DEPOSIT or DATASET_PUBLISH events
-    # we add a DATA_SUBMITTED event.
-    if 'dateSubmitted' in metadata:
-        dataset_submitted_event_2mongo(metadata['pid'], metadata['dateSubmitted'], metadata['audience'], metadata['files'])
-    elif 'dateAvailable' in metadata:
-        dataset_submitted_event_2mongo(metadata['pid'], metadata['dateAvailable'], metadata['audience'], metadata['files'])
-
     return metadata
 
 def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data, size):
@@ -126,12 +140,10 @@ def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data, size):
         # and the size value is accumulated. Otherwise a new document is created.
         collection_file.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': size}}, upsert=True)
     except:
-        logging.error("in inserting file %s of dataset %s into 'file' database. Error: %s" % (file_name, dataset_pid, sys.exc_info()[0]))
+        log_message(ERROR, "in inserting file %s of dataset %s into 'file' database. Error: %s" % (file_name, dataset_pid, sys.exc_info()[0]))
 
 
 def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
-    logging.info("Writing DATASET_SUBMITTED event to log file for dataset %s " % dataset)
-
     details = {}
     details['dataset'] = dataset
     details['discipline'] = discipline
@@ -146,8 +158,12 @@ def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
 
     try:
         collection_logs.insert_one(details)
+        log_message(INFO, "DATASET_SUBMITTED event added into the 'logs' collection for dataset %s " % dataset)
     except:
-        logging.error("in inserting DATASET_SUBMITTED event for dataset %s into 'logs' database. Error: %s" % (dataset, sys.exc_info()[0]))
+        log_message(ERROR, "in inserting DATASET_SUBMITTED event for dataset %s into 'logs' collection. Error: %s" % (dataset, sys.exc_info()[0]))
+        return
+
+    return True
 
 
 def log_file2mongo(path, col, report):
@@ -156,25 +172,16 @@ def log_file2mongo(path, col, report):
     outfile = open(report,'w')
     file.readline()
 
-    logging.info("Starting to parse file %s " % (fullpath))
     for lastline in file:
         lastline = lastline[:-1]
         try:
             nr_of_files = int(lastline.count("FILE_NAME"))
             log_details = get_log_details(lastline, nr_of_files, outfile)
             if log_details:
-                logging.info("adding line %s of file %s " % (lastline, fullpath))
-                # If a document with identical values is found, the count value of the document is increased by 1.
-                # Otherwise a new document is created.
-                nr_of_files = int(lastline.count("FILE_NAME"))
-                # if nr_of_files > 0:
-                #     col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': { 'count' : 1, 'files' : nr_of_files}}, upsert=True)
-                # else:
-                #     col.find_one_and_update(get_log_details(lastline, outfile), {'$inc': {'count': 1}}, upsert=True)
+                log_message(INFO, "adding line %s of file %s " % (lastline, fullpath))
                 col.insert_one(log_details)
         except:
-            logging.error("in inserting line %s into 'logs' database. Error: %s" % (lastline, sys.exc_info()[0]))
-    logging.info("Finished parsing file %s " % (fullpath))
+            log_message(ERROR, "in inserting line %s into 'logs' database. Error: %s" % (lastline, sys.exc_info()[0]))
 
     outfile.close()
 
