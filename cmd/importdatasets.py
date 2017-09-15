@@ -88,6 +88,7 @@ if tar_files <> 1:
 # first remove datasets_to_import directory and then extract tar-file into datasets_to_import directory
 shutil.rmtree(datasets_to_import_path, ignore_errors=True)
 tar_file = get_tar_file_path(datasets_path)
+log_message(INFO, "Extracting %s to %s" % (tar_file, datasets_to_import_path))
 extract_datasets(tar_file, datasets_to_import_path)
 log_message(INFO, "Extracted %s to %s" % (tar_file, datasets_to_import_path))
 
