@@ -16,19 +16,6 @@ import tarfile
 import shutil
 import logging
 
-INFO = 'info'
-ERROR = 'error'
-WARN = 'warn'
-
-def log_message(level, message):
-    if level == INFO:
-        logging.info(message)
-    elif level == ERROR:
-        logging.error(message)
-    elif level == WARN:
-        logging.warn(message)
-    print(message)
-
 def by_dataset_number(file_name):
   number_as_string = re.findall(r"\d+", file_name)
   return map(int, number_as_string)

@@ -11,20 +11,6 @@ from easy.settings import *
 from easy.core.database import *
 import logging
 
-INFO = 'info'
-ERROR = 'error'
-WARN = 'warn'
-
-def log_message(level, message):
-    if level == INFO:
-        logging.info(message)
-    elif level == ERROR:
-        logging.error(message)
-    elif level == WARN:
-        logging.warn(message)
-    print(message)
-
-
 logging.basicConfig(filename='logs/importlogs.log',format='%(asctime)s %(levelname)s  %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
 path = "%s/../../easyimports" % HERE
 logs_path = "%s/logs" % path
