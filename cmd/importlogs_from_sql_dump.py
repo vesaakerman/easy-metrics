@@ -75,9 +75,12 @@ for line in file:
                 stats_event = stats_events.get(stats_event_id)
             else:
                 log_message(ERROR, "Incorrect stats_event_id: %s (id = %s)" % (stats_event_id, id))
+
+            outfile.write('%s - %s ; %s ; roles: () ; groups: () ; %s' % (timestamp, stats_event, username, ip_address))
             if dataset_id != 'NULL':
-                outfile.write('%s - %s ; %s ; roles: () ; groups: () ; %s ; dataset(DATASET_ID: "easy-dataset:%s")\n' % (timestamp, stats_event, username, ip_address, dataset_id))
-            else:
-                outfile.write('%s - %s ; %s ; roles: () ; groups: () ; %s\n' % (timestamp, stats_event, username, ip_address))
+                outfile.write(' ; dataset(DATASET_ID: "easy-dataset:%s")' % dataset_id)
+            if stats_event == 'DOWNLOAD_FILE_REQUEST':
+                outfile.write(' ; file(FILE_NAME(0): "")')
+            outfile.write('\n')
 
 log_message(INFO,"%s FINISHED creating Easy2 compatible log-event file from sql-dump file %s\n" % (datetime.now(), sql_dump_file))
