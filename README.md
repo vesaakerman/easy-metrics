@@ -42,6 +42,8 @@ Datasets to be imported have to be in easyimports/datasets directory as a .tgz f
 
 Log events to be imported have to be in easyimports/logs directory
 ./cmd/importlogs.py
+
+Notice: to make sure that you have the right versions for all software you might want to use the same virtual environment as in Miniverse
 ```
 
 # Check if all data are imported in MongoDB
