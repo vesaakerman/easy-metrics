@@ -119,7 +119,7 @@ for filename in sorted_files:
                     log_message(ERROR, "DATASET IMPORT ABORTED")
                     break
             except:
-                log_message(ERROR, "Error in inserting %s into database. Error: %s" % (filename, sys.exc_info()[0]))
+                log_message(ERROR, "Error in inserting %s into database. Error: %s" % (filename, sys.exc_value))
                 log_message(ERROR, "DATASET IMPORT ABORTED")
                 break
         else:

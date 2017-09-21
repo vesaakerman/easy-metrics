@@ -110,7 +110,7 @@ def metadata2mongo(fullpath, logging):
                     log_message(ERROR, "No filename found in item %s" % metakey, False)
                     return
         except:
-            log_message(ERROR, "while processing line %s Error: %s" % (line.rstrip(), sys.exc_info()[0]), False)
+            log_message(ERROR, "while processing line %s Error: %s" % (line.rstrip(), sys.exc_value), False)
             return
 
     metadata['audience'] = audience
@@ -143,7 +143,7 @@ def dataset_file2mongo(dataset_pid, date_submitted, file_name, file_data, size):
         # and the size value is accumulated. Otherwise a new document is created.
         collection_file.find_one_and_update(file_data, {'$inc': {'count': 1, 'size': size}}, upsert=True)
     except:
-        log_message(ERROR, "in inserting file %s of dataset %s into 'file' database. Error: %s" % (file_name, dataset_pid, sys.exc_info()[0]), False)
+        log_message(ERROR, "in inserting file %s of dataset %s into 'file' database. Error: %s" % (file_name, dataset_pid, sys.exc_value), False)
 
 
 def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
@@ -163,7 +163,7 @@ def dataset_submitted_event_2mongo(dataset, date, discipline, nr_of_files):
         collection_logs.insert_one(details)
         log_message(INFO, "DATASET_SUBMITTED event added into the 'logs' collection for dataset %s " % dataset, False)
     except:
-        log_message(ERROR, "in inserting DATASET_SUBMITTED event for dataset %s into 'logs' collection. Error: %s" % (dataset, sys.exc_info()[0]), False)
+        log_message(ERROR, "in inserting DATASET_SUBMITTED event for dataset %s into 'logs' collection. Error: %s" % (dataset, sys.exc_value), False)
         return
 
     return True
@@ -184,7 +184,7 @@ def log_file2mongo(path, col, report):
                 log_message(INFO, "adding line %s of file %s " % (lastline, fullpath), False)
                 col.insert_one(log_details)
         except:
-            log_message(ERROR, "in inserting line %s into 'logs' database. Error: %s" % (lastline, sys.exc_info()[0]), False)
+            log_message(ERROR, "in inserting line %s into 'logs' database. Error: %s" % (lastline, sys.exc_value), False)
 
     outfile.close()
 
