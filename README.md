@@ -14,12 +14,34 @@ pip install pymongo
 yum install mongodb
 yum install mongodb-server
 
+# Create directories
+In easy-metrics home-directory:
+mkdir easyimports/datasets
+mkdir easyimports/datasets/imported_datasets
+mkdir easyimports/logs
+mkdir easyimports/logs/imported_logs
+mkdir easyimports/reports
+
 # Run mongodb
 mongod --smallfiles &
 
+#Create collections in Mongodb
+Create 'easy' database
+In 'easy' database create collections 'dataset', 'logs' and 'status'
+In 'dataset' collection create index for field 'pid'
+In 'logs' collection create index for field 'date'
+In 'status' collection add document:
+    {
+        "last_dataset_number" : NumberInt(0),
+        "document" : NumberInt(1)
+    }
+
 # Import test logs and datasets
-./cmd/importlogs.py
+Datasets to be imported have to be in easyimports/datasets directory as a .tgz file
 ./cmd/importdatasets.py
+
+Log events to be imported have to be in easyimports/logs directory
+./cmd/importlogs.py
 ```
 
 # Check if all data are imported in MongoDB
