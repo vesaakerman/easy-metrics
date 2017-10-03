@@ -35,8 +35,6 @@ def extract_datasets(tar_file, directory):
 def add_dataset_submitted_log_event(metadata, filename):
     if 'dateSubmitted' in metadata:
         submit_event_added = dataset_submitted_event_2mongo(metadata['pid'], metadata['dateSubmitted'], metadata['audience'], metadata['files'])
-    elif 'dateAvailable' in metadata:
-        submit_event_added = dataset_submitted_event_2mongo(metadata['pid'], metadata['dateAvailable'], metadata['audience'], metadata['files'])
     else:
         return True
 
